@@ -31,6 +31,17 @@ runs:
         mkdir -p theos/toolchain
         curl -fsSL https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz | tar -xJf - -C theos/toolchain/
 
+        # ターゲット名付きのシンボリックリンクを生成
+        BIN_DIR="$GITHUB_WORKSPACE/theos/toolchain/linux/iphone/bin"
+        if [ -d "$BIN_DIR" ]; then
+          cd "$BIN_DIR"
+          # ranlib や ar のエイリアスを作成（存在しない場合のみ張る）
+          [ -f llvm-ranlib ] && ln -sf llvm-ranlib aarch64-apple-darwin14-ranlib
+          [ -f ranlib ] && [ ! -f aarch64-apple-darwin14-ranlib ] && ln -sf ranlib aarch64-apple-darwin14-ranlib
+          [ -f llvm-ar ] && ln -sf llvm-ar aarch64-apple-darwin14-ar
+          [ -f ar ] && [ ! -f aarch64-apple-darwin14-ar ] && ln -sf ar aarch64-apple-darwin14-ar
+        fi
+
     - name: iOS SDK Caching
       id: sdk
       uses: actions/cache@v6
