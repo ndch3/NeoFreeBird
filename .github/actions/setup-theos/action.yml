@@ -27,7 +27,9 @@ runs:
 
     - name: Download iOS Toolchain
       shell: bash
-      run: curl -fsSL https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz | tar -xJf - -C theos/toolchain/
+      run: |
+        mkdir -p theos/toolchain
+        curl -fsSL https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz | tar -xJf - -C theos/toolchain/
 
     - name: iOS SDK Caching
       id: sdk
