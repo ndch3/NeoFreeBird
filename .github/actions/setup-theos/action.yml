@@ -35,21 +35,18 @@ runs:
         if [ -d "$BIN_DIR" ]; then
           cd "$BIN_DIR"
           
-          # llvm-ranlib または ranlib からのシンボリックリンク作成
-          if [ -f llvm-ranlib ]; then
-            ln -sf llvm-ranlib aarch64-apple-darwin14-ranlib
-          elif [ -f ranlib ]; then
-            ln -sf ranlib aarch64-apple-darwin14-ranlib
-          fi
-
-          # llvm-ar または ar からのシンボリックリンク作成
+          # LLVM版の ar / ranlib へ優先的にシンボリックリンクを張る
           if [ -f llvm-ar ]; then
             ln -sf llvm-ar aarch64-apple-darwin14-ar
-          elif [ -f ar ]; then
-            ln -sf ar aarch64-apple-darwin14-ar
+            ln -sf llvm-ar ar
+          fi
+
+          if [ -f llvm-ranlib ]; then
+            ln -sf llvm-ranlib aarch64-apple-darwin14-ranlib
+            ln -sf llvm-ranlib ranlib
           fi
           
-          # その他必要なツールチェーンのエイリアスを一括生成
+          # その他主要ツールのエイリアス生成
           for tool in clang clang++ ld nm objcopy objdump strip; do
             if [ -f "$tool" ]; then
               ln -sf "$tool" "aarch64-apple-darwin14-$tool"
