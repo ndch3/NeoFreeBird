@@ -53,7 +53,7 @@ jobs:
         with:
           sdk-version: ${{ inputs.sdk_version }}
 
-    # --- ここから追加 ---
+      # --- ここから追加・修正 ---
       - name: Patch Missing Clang Runtime Symbols
         run: |
           cat << 'EOF' > os_version_check.c
@@ -63,11 +63,17 @@ jobs:
               return true;
           }
           EOF
+          # コンパイルして静的ライブラリ (.a) を作成
           ${{ github.workspace }}/theos/toolchain/linux/iphone/bin/clang -c os_version_check.c -o os_version_check.o -target arm64-apple-darwin14
-          ${{ github.workspace }}/theos/toolchain/linux/iphone/bin/llvm-ar rcs libclang_rt.ios.a os_version_check.o
-          mkdir -p ${{ github.workspace }}/theos/toolchain/linux/iphone/lib
-          cp libclang_rt.ios.a ${{ github.workspace }}/theos/toolchain/linux/iphone/lib/
-      # --- ここまで追加 ---
+          ${{ github.workspace }}/theos/toolchain/linux/iphone/bin/llvm-ar rcs libos_check.a os_version_check.o
+          
+          # リンカーが自動検索する SDK の usr/lib ディレクトリへ直接配置
+          mkdir -p ${{ github.workspace }}/theos/sdks/iPhoneOS${{ inputs.sdk_version }}.sdk/usr/lib
+          cp libos_check.a ${{ github.workspace }}/theos/sdks/iPhoneOS${{ inputs.sdk_version }}.sdk/usr/lib/
+          
+          # 全てのビルドステップで確実に読み込ませるため GITHUB_ENV に登録
+          echo "ADDITIONAL_LDFLAGS=-los_check" >> $GITHUB_ENV
+      # --- ここまで ---
 
       - name: Compute ffmpeg Cache Key
         id: ffmpeg-key
@@ -98,11 +104,17 @@ jobs:
           BUILD_DIR: ${{ github.workspace }}/ffmpeg-build
           TWEAK_SDK_VERSION: ${{ inputs.sdk_version }}
           TWEAK_TARGET_VERSION: ${{ inputs.target_version }}
-
+# LDFLAGS ではなく ADDITIONAL_LDFLAGS を使用
+          ADDITIONAL_LDFLAGS: "-los_check"
+          
       - name: Build Rebranded IPAs
         run: |
           cd ${{ github.workspace }}/main
           ./build.py --release --sideloaded --trollstore --package-only --rebrand
+        env:
+          THEOS: ${{ github.workspace }}/theos
+          # こちらにも追加
+          ADDITIONAL_LDFLAGS: "-los_check"
 
       - name: Collect Packages
         run: |
