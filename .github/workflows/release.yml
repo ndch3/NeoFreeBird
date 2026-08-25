@@ -53,6 +53,22 @@ jobs:
         with:
           sdk-version: ${{ inputs.sdk_version }}
 
+    # --- ここから追加 ---
+      - name: Patch Missing Clang Runtime Symbols
+        run: |
+          cat << 'EOF' > os_version_check.c
+          #include <stdbool.h>
+          #include <stdint.h>
+          bool __isOSVersionAtLeast(int32_t major, int32_t minor, int32_t subminor) {
+              return true;
+          }
+          EOF
+          ${{ github.workspace }}/theos/toolchain/linux/iphone/bin/clang -c os_version_check.c -o os_version_check.o -target arm64-apple-darwin14
+          ${{ github.workspace }}/theos/toolchain/linux/iphone/bin/llvm-ar rcs libclang_rt.ios.a os_version_check.o
+          mkdir -p ${{ github.workspace }}/theos/toolchain/linux/iphone/lib
+          cp libclang_rt.ios.a ${{ github.workspace }}/theos/toolchain/linux/iphone/lib/
+      # --- ここまで追加 ---
+
       - name: Compute ffmpeg Cache Key
         id: ffmpeg-key
         run: |
