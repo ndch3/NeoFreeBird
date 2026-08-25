@@ -98,7 +98,12 @@ jobs:
         id: build
         run: |
           cd ${{ github.workspace }}/main
-          ./build.py --release --rootless --rootful --sideloaded --trollstore
+          # 1. 競合しない rootless と rootful を先にビルド
+          ./build.py --release --rootless --rootful
+          # 2. sideloaded を単独でビルド（ここで Patina が安全にダウンロード・キャッシュされる）
+          ./build.py --release --sideloaded
+          # 3. trollstore を単独でビルド（キャッシュ済みの Patina が即座に使われる）
+          ./build.py --release --trollstore
         env:
           THEOS: ${{ github.workspace }}/theos
           BUILD_DIR: ${{ github.workspace }}/ffmpeg-build
@@ -110,7 +115,9 @@ jobs:
       - name: Build Rebranded IPAs
         run: |
           cd ${{ github.workspace }}/main
-          ./build.py --release --sideloaded --trollstore --package-only --rebrand
+          # リブランド処理も同様に1つずつ順番に実行
+          ./build.py --release --sideloaded --package-only --rebrand
+          ./build.py --release --trollstore --package-only --rebrand
         env:
           THEOS: ${{ github.workspace }}/theos
           # こちらにも追加
