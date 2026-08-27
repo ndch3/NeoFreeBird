@@ -30,7 +30,7 @@
     "archs": ["arm64"],
     "sdk_version": "16.5",
     "target_version": "14.0",
-    "subprojects": ["flex"],
+    "subprojects": [],
     "sideload_subprojects": ["zxPluginsInject/upstream"],
     "frameworks": [
       "UIKit",
